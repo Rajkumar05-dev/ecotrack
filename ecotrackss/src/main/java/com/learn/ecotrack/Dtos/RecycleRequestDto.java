@@ -11,7 +11,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class RecycleRequestDto {
-	private int id;
+	private Integer id;
 	private String itemType;
 	private String itemImage;
 	private int quantity;
