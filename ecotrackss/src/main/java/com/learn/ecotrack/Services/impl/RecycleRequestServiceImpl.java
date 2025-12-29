@@ -2,6 +2,7 @@ package com.learn.ecotrack.Services.impl;
 
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 import com.learn.ecotrack.Dtos.RecycleRequestDto;
@@ -34,6 +35,35 @@ public class RecycleRequestServiceImpl implements RecycleRequestService {
 	 request.setRequestStatus(RequestStatus.PENDING);
 	 RecycleRequest savedRequest= recycleRequestRepository.save(request);
 		return modelMapper.map(savedRequest, RecycleRequestDto.class);
+	}
+
+
+	@Override
+	public RecycleRequestDto rejectRequest(int requestId, String reason) {
+		RecycleRequest request = recycleRequestRepository.findById(requestId).orElseThrow(()->new NotFoundException("Request not found"));
+		request.setRequestStatus(RequestStatus.REJECTED);
+		request.setReason(reason);
+RecycleRequest	saved	=recycleRequestRepository.save(request);
+		return   modelMapper.map(saved,RecycleRequestDto.class);
+	}
+
+
+	@Override
+	public RecycleRequestDto approvedRequest(int requestId) {
+		RecycleRequest request = recycleRequestRepository.findById(requestId).orElseThrow(()->new NotFoundException("Request not found"));
+		request.setRequestStatus(RequestStatus.APPROVED);
+	
+RecycleRequest	saved	=recycleRequestRepository.save(request);
+		return modelMapper.map(saved, RecycleRequestDto.class);
+	}
+
+
+	@Override
+	public String setRequestImage(String image, int id) {
+		RecycleRequest request = recycleRequestRepository.findById(id).orElseThrow(()->new NotFoundException("Request not found"));
+		request.setItemImage(image);
+		RecycleRequest saved = recycleRequestRepository.save(request);
+		return saved.getItemImage();
 	}
 
 }
