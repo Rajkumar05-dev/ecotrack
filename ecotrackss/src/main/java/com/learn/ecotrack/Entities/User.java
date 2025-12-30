@@ -2,6 +2,7 @@ package com.learn.ecotrack.Entities;
 
 
 
+import java.util.ArrayList;
 import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
@@ -44,4 +45,7 @@ public class User {
 	@ManyToOne
 	@JsonManagedReference
 	private Role role;
+	@OneToMany(mappedBy ="user")
+	@JsonBackReference
+	private List<Enrollments> enrollment=new ArrayList<Enrollments>();
 }
