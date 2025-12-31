@@ -3,9 +3,17 @@ package com.learn.ecotrack.Entities;
 
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 
+import org.jspecify.annotations.Nullable;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
+
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 
 import jakarta.persistence.Column;
@@ -23,7 +31,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 @Entity
-public class User {
+public class User implements UserDetails {
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.UUID)
@@ -33,19 +41,58 @@ public class User {
 	private String name;
 	@Column(nullable = false,unique = true)
 	private  String email;
-	@Column(nullable = false,unique = true)
+	@Column(nullable = false,unique = false)
 	private  String password;
 	@Column(nullable = false)
 	private String phoneNo;
 	
 	@OneToMany(mappedBy = "user")
-	@JsonBackReference
+	@JsonBackReference("user-request")
 	private List<RecycleRequest> recycleRequests;
 	
 	@ManyToOne
 	@JsonManagedReference
+	@JsonIgnore
 	private Role role;
 	@OneToMany(mappedBy ="user")
-	@JsonBackReference
+	@JsonBackReference("user-enrollment")
 	private List<Enrollments> enrollment=new ArrayList<Enrollments>();
+	@Override
+	public Collection<? extends GrantedAuthority> getAuthorities() {
+		return Arrays.asList(new SimpleGrantedAuthority(role.getAppRole().toString()));
+		
+	}
+	@Override
+	public String getUsername() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+	@Override
+	public String getPassword() {
+		// TODO Auto-generated method stub
+		return password;
+	}
+
+	
+	@Override
+	public  boolean isAccountNonExpired() {
+		return true;
+	}
+
+	
+	@Override
+	public  boolean isAccountNonLocked() {
+		return true;
+	}
+
+	
+	@Override
+	public  boolean isCredentialsNonExpired() {
+		return true;
+	}
+
+	@Override
+	public  boolean isEnabled() {
+		return true;
+	}
 }
