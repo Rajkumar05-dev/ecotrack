@@ -10,7 +10,7 @@ public interface WorkShopService {
  WorkShopDto addWorkShop(WorkShopDto workShopDto );
  WorkShopDto   UpdateWorkShop(int id ,WorkShopDto workShopDto);
  WorkShopDto getWorkShop(int id);
- List<WorkShopDto> getAllWorkShops();
+ List<WorkShopDto> getAllWorkShops(int pageNumber,int pageSize);
 
  void deletWorkSho(int id);
  

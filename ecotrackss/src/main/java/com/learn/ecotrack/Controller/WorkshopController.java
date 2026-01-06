@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.service.annotation.GetExchange;
 
@@ -31,8 +32,8 @@ public class WorkshopController {
 		  return new ResponseEntity<WorkShopDto>(workShopService.addWorkShop(workShopDto),HttpStatus.CREATED);
 	 }
 	@GetMapping
-	public ResponseEntity<List<WorkShopDto>> getAllWorkShop(){
-		return new ResponseEntity<List<WorkShopDto>>(workShopService.getAllWorkShops(),HttpStatus.OK);
+	public ResponseEntity<List<WorkShopDto>> getAllWorkShop( @RequestParam(defaultValue = "0") int pageNumber, @RequestParam(defaultValue = "2") int pageSize ){
+		return new ResponseEntity<List<WorkShopDto>>(workShopService.getAllWorkShops(pageNumber,pageSize),HttpStatus.OK);
 	}
 	
 	@GetMapping("/{id}")

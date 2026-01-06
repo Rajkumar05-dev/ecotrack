@@ -42,8 +42,8 @@ public class SecurityConfig {
         }))
 		
 		.authorizeHttpRequests(req->req
-		.requestMatchers( "/users/**","/auth/login").permitAll()
-		.requestMatchers("/workshops/**").permitAll()
+		.requestMatchers("/users/**","/auth/login").permitAll()
+		.requestMatchers("/workshops/**","/enroll/**").permitAll()
 		.anyRequest().authenticated()
 		);
 		
