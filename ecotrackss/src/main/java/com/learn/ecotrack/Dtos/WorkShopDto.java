@@ -12,7 +12,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class WorkShopDto {
 	
-	
+	  private Integer id;
 	private String name;
 	private String description;
 	private Integer price;
