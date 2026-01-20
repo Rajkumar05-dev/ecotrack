@@ -59,7 +59,7 @@ public class EnrollmentsServiceImpl  implements EnrollmentService{
 	
 	
 	Enrollments savedEnrollment = enrollmentRepository.save(enrollments);
-	emailService.sendEmail("priyanka.vibhute@itvedant.com","congratulationas !enrillment complete", "Thanks for enrolling"+workshop.getName());
+	emailService.sendEmail(user.getEmail(),"congratulationas !enrillment complete", "Thanks for enrolling"+workshop.getName());
 		return modelMapper.map(savedEnrollment, EnrollmentsDto.class);
 	}
 	@Override

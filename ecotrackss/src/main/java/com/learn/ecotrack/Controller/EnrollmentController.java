@@ -35,6 +35,8 @@ public class EnrollmentController {
 	@Autowired
 	private EnrollmentService  enrollmentService;
 	
+ 
+	
 	@PostMapping("/{userId}/enroll/{workShopId}")
 	public ResponseEntity<EnrollmentsDto> addenroll( @PathVariable String userId, @PathVariable  int workShopId){
 		return ResponseEntity.ok(enrollmentService.enroll(userId,workShopId));
