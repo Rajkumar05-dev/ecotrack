@@ -3,6 +3,7 @@ package com.learn.ecotrack.Security;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
@@ -32,43 +33,48 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
 
         http
-            // ❌ CSRF disabled (JWT based auth)
+            // ❌ CSRF (JWT based)
             .csrf(csrf -> csrf.disable())
 
-            // 🌍 CORS config
+            // 🌍 CORS
             .cors(cors -> cors.configurationSource(request -> {
                 CorsConfiguration config = new CorsConfiguration();
                 config.setAllowCredentials(true);
-                config.addAllowedOrigin("http://localhost:5173");
+                config.addAllowedOrigin("http://localhost:5176");
                 config.addAllowedHeader("*");
                 config.addAllowedMethod("*");
                 return config;
             }))
 
-            // 🔐 Authorization rules
+            // 🔐 Authorization
             .authorizeHttpRequests(auth -> auth
 
-                // 🔓 Public APIs
+                // 🔓 Public
                 .requestMatchers(
                     "/auth/login",
-                    "/auth/register",
-                    "/users/**"
+                    "/auth/register"
                 ).permitAll()
 
-                // 👤 USER + ADMIN
-                .requestMatchers(
-                    "/workshops/**",
-                    "/enroll/**"
+                // 👤 USER + ADMIN (READ / BASIC)
+                .requestMatchers(HttpMethod.GET,
+                    "/workshops/**"
                 ).hasAnyRole("USER", "ADMIN")
+
+                // 👤 USER only
+                .requestMatchers(
+                    "/payments/pay/**",
+                    "/enroll/**"
+                ).hasRole("USER")
 
                 // 👑 ADMIN only
                 .requestMatchers(
-                    "/payments/**",
-                    "/recycle/**",
-                    "/admin/**"
+                    "/admin/**",
+                    "/workshops/admin/**",
+                    "/payments/admin/**",
+                    "/recycle/**"
                 ).hasRole("ADMIN")
 
-                // 🔒 Everything else needs authentication
+                // 🔒 Everything else
                 .anyRequest().authenticated()
             )
 
@@ -77,7 +83,7 @@ public class SecurityConfig {
                 ex.authenticationEntryPoint(authEntryPointJwt)
             );
 
-        // 🔁 JWT filter
+        // 🔁 JWT Filter
         http.addFilterBefore(
             authTokenFilter,
             UsernamePasswordAuthenticationFilter.class
@@ -86,13 +92,13 @@ public class SecurityConfig {
         return http.build();
     }
 
-    // 🔑 Password encoder
+    // 🔑 Password Encoder
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
 
-    // 🔐 Authentication manager
+    // 🔐 Authentication Manager
     @Bean
     public AuthenticationManager authenticationManager(
             AuthenticationConfiguration config) throws Exception {
