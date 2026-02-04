@@ -29,12 +29,14 @@ public class UserServiceImpl implements UserService{
 	    private PasswordEncoder passwordEncoder;
 	@Override
 	public UserDto createUser(UserDto userDto) {
+		
+		 userDto.setPassword(
+		            passwordEncoder.encode(userDto.getPassword())
+		        );
 		User user = modelMapper.map(userDto,User.class);
 
         // ✅ PASSWORD ENCODE HERE
-        user.setPassword(
-            passwordEncoder.encode(user.getPassword())
-        );
+       
 		Role role = roleRepository.findByAppRole(AppRole.ROLE_USER).orElseThrow(()->new NotFoundException("Role not found"));
 		user.setRole(role);
 		User savedUser = userRespository.save(user);
