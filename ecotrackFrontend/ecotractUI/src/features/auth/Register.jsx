@@ -5,7 +5,7 @@ import { registerUser } from "./authService";
 export default function Register() {
   const [form, setForm] = useState({
     name: "",
-    username: "",
+    email: "",
     password: "",
   });
 
@@ -27,85 +27,65 @@ export default function Register() {
       await registerUser(form);
       navigate("/login");
     } catch {
-      setError("Registration failed. Username may already exist.");
+      setError("Registration failed");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
-      <div className="w-full max-w-md bg-white rounded-xl shadow-lg p-8">
-        <h2 className="text-2xl font-bold text-center text-green-700 mb-2">
-          Create Account
+    <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="w-full max-w-md bg-white p-8 rounded-xl shadow">
+        <h2 className="text-2xl font-bold text-center text-green-700">
+          Register
         </h2>
-        <p className="text-center text-gray-500 mb-6">
-          Join EcoTrack and start making impact 🌱
-        </p>
 
         {error && (
-          <div className="mb-4 text-sm text-red-600 bg-red-50 p-2 rounded">
-            {error}
-          </div>
+          <p className="text-red-600 text-sm mt-3 text-center">{error}</p>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-600 mb-1">
-              Full Name
-            </label>
-            <input
-              type="text"
-              name="name"
-              value={form.name}
-              onChange={handleChange}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
-              required
-            />
-          </div>
+        <form onSubmit={handleSubmit} className="space-y-4 mt-6">
+          <input
+            type="text"
+            name="name"
+            placeholder="Full Name"
+            value={form.name}
+            onChange={handleChange}
+            required
+            className="w-full border px-3 py-2 rounded"
+          />
 
-          <div>
-            <label className="block text-sm font-medium text-gray-600 mb-1">
-              Username
-            </label>
-            <input
-              type="text"
-              name="username"
-              value={form.username}
-              onChange={handleChange}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
-              required
-            />
-          </div>
+          <input
+            type="email"
+            name="email"
+            placeholder="Email"
+            value={form.email}
+            onChange={handleChange}
+            required
+            className="w-full border px-3 py-2 rounded"
+          />
 
-          <div>
-            <label className="block text-sm font-medium text-gray-600 mb-1">
-              Password
-            </label>
-            <input
-              type="password"
-              name="password"
-              value={form.password}
-              onChange={handleChange}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
-              required
-            />
-          </div>
+          <input
+            type="password"
+            name="password"
+            placeholder="Password"
+            value={form.password}
+            onChange={handleChange}
+            required
+            className="w-full border px-3 py-2 rounded"
+          />
 
           <button
             disabled={loading}
-            className="w-full bg-green-600 hover:bg-green-700 text-white font-medium py-2 rounded-lg transition disabled:opacity-50"
+            className="w-full bg-green-600 text-white py-2 rounded"
           >
-            {loading ? "Creating account..." : "Register"}
+            {loading ? "Creating..." : "Register"}
           </button>
         </form>
 
-        <p className="text-center text-sm text-gray-500 mt-6">
+        <p className="text-center text-sm mt-4">
           Already have an account?{" "}
-          <Link
-            to="/login"
-            className="text-green-600 font-medium hover:underline"
-          >
+          <Link to="/login" className="text-green-600">
             Login
           </Link>
         </p>
