@@ -6,7 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 
-import java.util.Optional;
+import java.util.Optional;// j   unit testing  
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -21,7 +21,6 @@ import com.learn.ecotrack.Dtos.UserDto;
 import com.learn.ecotrack.Entities.Role;
 import com.learn.ecotrack.Entities.User;
 import com.learn.ecotrack.Enum.AppRole;
-import com.learn.ecotrack.Exception.NotFoundException;
 import com.learn.ecotrack.Repository.RoleRepository;
 import com.learn.ecotrack.Repository.UserRespository;
 import com.learn.ecotrack.Services.impl.UserServiceImpl;

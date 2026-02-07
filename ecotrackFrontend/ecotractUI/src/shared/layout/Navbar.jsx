@@ -1,5 +1,6 @@
 import { Link, NavLink } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
+import { UserCircle, LogOut } from "lucide-react";
 
 export default function Navbar() {
   const { auth, logout } = useAuth();
@@ -43,6 +44,7 @@ export default function Navbar() {
 
           {auth && (
             <>
+              {/* Admin link */}
               {auth.role === "ROLE_ADMIN" && (
                 <NavLink
                   to="/admin"
@@ -58,10 +60,20 @@ export default function Navbar() {
                 </NavLink>
               )}
 
+              {/* User info */}
+              <div className="flex items-center gap-2 bg-gray-50 px-3 py-1.5 rounded-full border">
+                <UserCircle className="w-6 h-6 text-green-600" />
+                <span className="text-sm font-medium text-gray-700">
+                  {auth.username || auth.name}
+                </span>
+              </div>
+
+              {/* Logout */}
               <button
                 onClick={logout}
-                className="text-sm font-medium text-red-600 hover:text-red-700 transition"
+                className="flex items-center gap-1 text-sm font-medium text-red-600 hover:text-red-700 transition"
               >
+                <LogOut className="w-4 h-4" />
                 Logout
               </button>
             </>

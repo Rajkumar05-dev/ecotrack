@@ -23,85 +23,68 @@ import com.learn.ecotrack.Security.jwt.AuthTokenFilter;
 @EnableMethodSecurity
 public class SecurityConfig {
 
-    @Autowired
-    private AuthEntryPointJwt authEntryPointJwt;
+	@Autowired
+	private AuthEntryPointJwt authEntryPointJwt;
 
-    @Autowired
-    private AuthTokenFilter authTokenFilter;
+	@Autowired
+	private AuthTokenFilter authTokenFilter;
 
-    @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+	@Bean
+	public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
 
-        http
-            // ❌ CSRF (JWT based)
-            .csrf(csrf -> csrf.disable())
+		http
+				// ❌ CSRF (JWT based)
+				.csrf(csrf -> csrf.disable())
 
-            // 🌍 CORS
-            .cors(cors -> cors.configurationSource(request -> {
-                CorsConfiguration config = new CorsConfiguration();
-                config.setAllowCredentials(true);
-                config.addAllowedOrigin("http://localhost:5173");
-                config.addAllowedHeader("*");
-                config.addAllowedMethod("*");
-                return config;
-            }))
+				// 🌍 CORS
+				.cors(cors -> cors.configurationSource(request -> {
+					CorsConfiguration config = new CorsConfiguration();
+					config.setAllowCredentials(true);
+					config.addAllowedOrigin("http://localhost:5173");
+					config.addAllowedHeader("*");
+					config.addAllowedMethod("*");
+					return config;
+				}))
 
-            // 🔐 Authorization
-            .authorizeHttpRequests(auth -> auth
+				// 🔐 Authorization
+				.authorizeHttpRequests(auth -> auth
 
-                // 🔓 Public
-                .requestMatchers(
-                    "/auth/login",
-                    "/auth/register"
-                ).permitAll()
+						// 🔓 Public
+						.requestMatchers("/auth/login", "/auth/register").permitAll()
 
-                // 👤 USER + ADMIN (READ / BASIC)
-                .requestMatchers(HttpMethod.GET,
-                    "/workshops/**"
-                ).hasAnyRole("USER", "ADMIN")
+						// 👤 USER + ADMIN (READ / BASIC)
+						.requestMatchers(HttpMethod.POST, "/workshops/", "/workshops/**").hasRole("ADMIN")
 
-                // 👤 USER only
-                .requestMatchers(
-                    "/payments/pay/**",
-                    "/enroll/**"
-                ).hasRole("USER")
+						.requestMatchers(HttpMethod.GET, "/workshops/", "/workshops/**").permitAll()
 
-                // 👑 ADMIN only
-                .requestMatchers(
-                    "/admin/**",
-                    "/workshops/admin/**",
-                    "/payments/admin/**",
-                    "/recycle/**"
-                ).hasRole("ADMIN")
+						// 👤 USER only
+						.requestMatchers("/payments/pay/**", "/enroll/**").hasRole("USER")
 
-                // 🔒 Everything else
-                .anyRequest().authenticated()
-            )
+						// 👑 ADMIN only
+						.requestMatchers("/admin/**", "/workshops/admin/**", "/payments/admin/**", "/recycle/**")
+						.hasRole("ADMIN")
 
-            // ❗ Unauthorized handler
-            .exceptionHandling(ex ->
-                ex.authenticationEntryPoint(authEntryPointJwt)
-            );
+						// 🔒 Everything else
+						.anyRequest().authenticated())
 
-        // 🔁 JWT Filter
-        http.addFilterBefore(
-            authTokenFilter,
-            UsernamePasswordAuthenticationFilter.class
-        );
+				// ❗ Unauthorized handler
+				.exceptionHandling(ex -> ex.authenticationEntryPoint(authEntryPointJwt));
 
-        return http.build();
-    }
+		// 🔁 JWT Filter
+		http.addFilterBefore(authTokenFilter, UsernamePasswordAuthenticationFilter.class);
 
-    // 🔑 Password Encoder
-    @Bean
-    public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
-    }
+		return http.build();
+	}
 
-    // 🔐 Authentication Manager
-    @Bean
-    public AuthenticationManager authenticationManager(
-            AuthenticationConfiguration config) throws Exception {
-        return config.getAuthenticationManager();
-    }
+	// 🔑 Password Encoder
+	@Bean
+	public PasswordEncoder passwordEncoder() {
+		return new BCryptPasswordEncoder();
+	}
+
+	// 🔐 Authentication Manager
+	@Bean
+	public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
+		return config.getAuthenticationManager();
+	}
 }
