@@ -1,20 +1,19 @@
 package ClassandObject;
 
-public class Car {
-String brand ;
-double price;
-Car(String brand,double price){
-	this.brand=brand;
-	this .price=price;			
+class Car {
+String brand;
+ String model;
+ String price;
+ void display() {
+	 System.out.println("brand:"+brand);
+	 System.out.println("model:"+model);
+	 System.out.println("price:"+price);
+ }
+ public static void main(String[] args) {
+	Car c = new Car();
+	c.brand="BMW";
+	c.model="BMW M5";
+	c.price="2.5cr";
+	c.display();
 }
-void carDetails() {
-	System.out.println(brand);
-	System.out.println(price);
 }
-	public static void main(String[] args) {
-		Car c = new Car("BMW", 120000);
-		c.carDetails();
-		
-	}
-}
- 

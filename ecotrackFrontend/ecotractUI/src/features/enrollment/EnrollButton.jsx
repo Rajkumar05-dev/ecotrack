@@ -1,12 +1,14 @@
-import { enrollWorkshop } from "./enrollService";
-
 export default function EnrollButton({ workshopId }) {
   const handleEnroll = async () => {
     try {
       await enrollWorkshop(workshopId);
       alert("Enrollment successful ✅");
     } catch (err) {
-      alert("Enrollment failed ❌");
+      if (err.response?.status === 401) {
+        alert("Session expired, please login again ❌");
+      } else {
+        alert("Enrollment failed ❌");
+      }
     }
   };
 

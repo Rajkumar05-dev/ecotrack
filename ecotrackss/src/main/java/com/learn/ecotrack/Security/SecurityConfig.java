@@ -48,9 +48,13 @@ public class SecurityConfig {
 
 				// 🔐 Authorization
 				.authorizeHttpRequests(auth -> auth
-
+						 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
 						// 🔓 Public
-						.requestMatchers("/auth/login", "/auth/register").permitAll()
+						 .requestMatchers(
+					                "/users/register",
+					                "/auth/login",
+					                "/auth/**"
+					            ).permitAll()
 
 						// 👤 USER + ADMIN (READ / BASIC)
 						.requestMatchers(HttpMethod.POST, "/workshops/", "/workshops/**").hasRole("ADMIN")

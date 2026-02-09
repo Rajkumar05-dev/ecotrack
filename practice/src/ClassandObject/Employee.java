@@ -1,21 +1,23 @@
 package ClassandObject;
 
-public class Employee {
-     String name;
-    String salary;
-   void display() {
-	 System.out.println(name +" "+salary);
+// Employee class
+class Employee {
+    int id;
+    String name;
 
-	}
-   public static void main(String[] args) {
-	Employee e = new Employee();
-	e.name="raj";
-	e.salary="2cr";
-	e.display();
-	Employee e1 = new Employee();
-	e1.name="tyw";
-			e1.salary="1.5cr";
-			e1.display();
-					
+    Employee(int id, String name) {
+        this.id = id;
+        this.name = name;
+    }
 }
+
+// Printer class
+class Printer {
+    void printEmployee(Employee e) {
+        System.out.println("Employee ID   : " + e.id);
+        System.out.println("Employee Name : " + e.name);
+    }
 }
+
+// Main class (ENTRY POINT)
+
