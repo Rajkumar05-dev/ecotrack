@@ -36,23 +36,23 @@ import java.util.Scanner;
 //	order.placeOrder();
 //	}
 //}
-public class Main {
-    public static void main(String[] args) {
-        Scanner sc = new Scanner(System.in);
-
-        System.out.print("Enter payment type: ");
-        String type = sc.next();
-
-        Payment p = PaymentFactory.getPayment(type);
-
-        if (p != null)
-            p.pay(1000);
-        else
-            System.out.println("Invalid payment method");
-
-        sc.close();
-    }
-}
+///public class Main {
+//    public static void main(String[] args) {
+//        Scanner sc = new Scanner(System.in);
+//
+//        System.out.print("Enter payment type: ");
+//        String type = sc.next();
+//
+//        Payment p = PaymentFactory.getPayment(type);
+//
+//        if (p != null)
+//            p.pay(1000);
+//        else
+//            System.out.println("Invalid payment method");
+//
+//        sc.close();
+//    }
+//}
 
 
 
