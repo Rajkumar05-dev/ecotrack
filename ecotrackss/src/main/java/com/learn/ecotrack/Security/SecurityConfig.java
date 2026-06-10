@@ -48,27 +48,13 @@ public class SecurityConfig {
 
 				// 🔐 Authorization
 				.authorizeHttpRequests(auth -> auth
-						 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-						// 🔓 Public
-						 .requestMatchers(
-					                "/users/register",
-					                "/auth/login",
-					                "/auth/**"
-					            ).permitAll()
-
-						// 👤 USER + ADMIN (READ / BASIC)
-						.requestMatchers(HttpMethod.POST, "/workshops/", "/workshops/**").hasRole("ADMIN")
-
-						.requestMatchers(HttpMethod.GET, "/workshops/", "/workshops/**").permitAll()
-
-						// 👤 USER only
-						.requestMatchers("/payments/pay/**", "/enroll/**").hasRole("USER")
-
-						// 👑 ADMIN only
-						.requestMatchers("/admin/**", "/workshops/admin/**", "/payments/admin/**", "/recycle/**")
+						.requestMatchers(HttpMethod.POST,"/users/register","/auth/login").permitAll()
+						.requestMatchers(HttpMethod.GET,"/workshops/**","/users/exists").permitAll()
+						.requestMatchers(HttpMethod.POST,"/workshops").hasRole("ADMIN")
+						.requestMatchers(HttpMethod.PUT,"/workshops/**",
+								"/request/approve/**","/request/reject/**")
 						.hasRole("ADMIN")
-
-						// 🔒 Everything else
+						.requestMatchers(HttpMethod.DELETE,"/workshops/**").hasRole("ADMIN")
 						.anyRequest().authenticated())
 
 				// ❗ Unauthorized handler

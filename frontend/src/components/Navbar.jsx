@@ -1,89 +1,183 @@
-import React, { useContext } from 'react';
+import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { AuthContext } from '../context/AuthContext';
-import { FaBars, FaTimes } from 'react-icons/fa'; // Ensure react-icons is installed
+import { useAuth } from '../App';
+import { Leaf, LogOut, User, Calendar, Home as HomeIcon, Menu, X, Shield } from 'lucide-react';
 
 const Navbar = () => {
-    const { user, logout } = useContext(AuthContext);
-    const navigate = useNavigate();
-    const [isOpen, setIsOpen] = React.useState(false);
+  const { user, logoutSession } = useAuth();
+  const navigate = useNavigate();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-    const handleLogout = () => {
-        logout();
-        navigate('/login');
-    };
+  const handleLogout = () => {
+    logoutSession();
+    navigate('/');
+    setMobileMenuOpen(false);
+  };
 
-    const toggleMenu = () => {
-        setIsOpen(!isOpen);
-    };
+  const isAdmin = user?.role?.appRole?.includes('ADMIN');
 
-    const role = user?.role || user?.authorities?.[0]?.authority;
-    const isAdmin = role === 'ROLE_ADMIN';
-    const isUser = role === 'ROLE_USER';
+  return (
+    <nav className="glass" style={{
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      right: 0,
+      height: '80px',
+      zIndex: 100,
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      padding: '0 40px',
+      borderRadius: '0 0 var(--radius-md) var(--radius-md)',
+      borderTop: 'none'
+    }}>
+      <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: '10px' }} onClick={() => setMobileMenuOpen(false)}>
+        <div style={{
+          background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+          padding: '8px',
+          borderRadius: '50%',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center'
+        }}>
+          <Leaf size={20} color="#0b1511" />
+        </div>
+        <span style={{
+          fontFamily: 'var(--font-display)',
+          fontWeight: 800,
+          fontSize: '1.4rem',
+          letterSpacing: '-0.03em',
+          background: 'linear-gradient(95deg, #a7f3d0 0%, #34d399 100%)',
+          WebkitBackgroundClip: 'text',
+          WebkitTextFillColor: 'transparent'
+        }}>
+          EcoTrack
+        </span>
+      </Link>
 
-    return (
-        <nav className="bg-gray-800 text-white p-4">
-            <div className="container mx-auto flex justify-between items-center">
-                <Link to="/" className="text-xl font-bold">EcoTrack</Link>
-                <div className="hidden md:flex space-x-4">
-                    <Link to="/" className="hover:text-gray-300">Home</Link>
-                    <Link to="/workshops" className="hover:text-gray-300">Workshops</Link>
-
-                    {isUser && (
-                        <Link to="/user/dashboard" className="hover:text-gray-300">Dashboard</Link>
-                    )}
-
-                    {isAdmin && (
-                        <>
-                            <Link to="/admin/dashboard" className="hover:text-gray-300">Dashboard</Link>
-                            <Link to="/admin/workshops" className="hover:text-gray-300">Manage Workshops</Link>
-                        </>
-                    )}
-
-                    {user ? (
-                        <button onClick={handleLogout} className="hover:text-gray-300">Logout</button>
-                    ) : (
-                        <>
-                            <Link to="/login" className="hover:text-gray-300">Login</Link>
-                            <Link to="/register" className="hover:text-gray-300">Register</Link>
-                        </>
-                    )}
-                </div>
-
-                {/* Mobile Menu Button */}
-                <div className="md:hidden">
-                    <button onClick={toggleMenu}>
-                        {isOpen ? <FaTimes /> : <FaBars />}
-                    </button>
-                </div>
+      {/* Desktop Menu */}
+      <div style={{ display: 'none', gap: '30px', alignItems: 'center' }} className="desktop-menu-container">
+        <Link to="/" className="nav-link" style={linkStyle}>Home</Link>
+        <Link to="/workshops" className="nav-link" style={linkStyle}>Workshops</Link>
+        {user ? (
+          <>
+            <Link to="/dashboard" className="nav-link" style={linkStyle}>Dashboard</Link>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '15px', marginLeft: '10px' }}>
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                padding: '6px 14px',
+                borderRadius: '999px',
+                background: 'rgba(255, 255, 255, 0.05)',
+                border: '1px solid var(--dark-border)',
+                fontSize: '0.9rem'
+              }}>
+                {isAdmin ? <Shield size={14} color="#34d399" /> : <User size={14} color="#34d399" />}
+                <span style={{ color: 'var(--text-secondary-dark)', fontWeight: 500 }}>
+                  {user.name}
+                </span>
+              </div>
+              <button onClick={handleLogout} className="btn btn-secondary" style={{ padding: '8px 16px', fontSize: '0.85rem' }}>
+                <LogOut size={14} /> Log Out
+              </button>
             </div>
+          </>
+        ) : (
+          <div style={{ display: 'flex', gap: '12px' }}>
+            <Link to="/login" className="btn btn-secondary" style={{ padding: '8px 20px', fontSize: '0.9rem' }}>Log In</Link>
+            <Link to="/register" className="btn btn-primary" style={{ padding: '8px 20px', fontSize: '0.9rem' }}>Sign Up</Link>
+          </div>
+        )}
+      </div>
 
-            {/* Mobile Menu */}
-            {isOpen && (
-                <div className="md:hidden mt-2 space-y-2">
-                    <Link to="/" className="block py-2 px-4 hover:bg-gray-700">Home</Link>
-                    <Link to="/workshops" className="block py-2 px-4 hover:bg-gray-700">Workshops</Link>
-                    {isUser && (
-                        <Link to="/user/dashboard" className="block py-2 px-4 hover:bg-gray-700">Dashboard</Link>
-                    )}
-                    {isAdmin && (
-                        <>
-                            <Link to="/admin/dashboard" className="block py-2 px-4 hover:bg-gray-700">Dashboard</Link>
-                            <Link to="/admin/workshops" className="block py-2 px-4 hover:bg-gray-700">Manage Workshops</Link>
-                        </>
-                    )}
-                    {user ? (
-                        <button onClick={handleLogout} className="block w-full text-left py-2 px-4 hover:bg-gray-700">Logout</button>
-                    ) : (
-                        <>
-                            <Link to="/login" className="block py-2 px-4 hover:bg-gray-700">Login</Link>
-                            <Link to="/register" className="block py-2 px-4 hover:bg-gray-700">Register</Link>
-                        </>
-                    )}
-                </div>
-            )}
-        </nav>
-    );
+      {/* Mobile Toggle */}
+      <button 
+        style={{
+          background: 'none',
+          border: 'none',
+          color: 'var(--text-primary-dark)',
+          cursor: 'pointer',
+          display: 'block'
+        }}
+        onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+        className="mobile-toggle-btn"
+      >
+        {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+      </button>
+
+      {/* Mobile Menu Panel */}
+      {mobileMenuOpen && (
+        <div className="glass" style={{
+          position: 'absolute',
+          top: '85px',
+          left: '20px',
+          right: '20px',
+          borderRadius: 'var(--radius-md)',
+          padding: '24px',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '16px',
+          zIndex: 99
+        }}>
+          <Link to="/" style={mobileLinkStyle} onClick={() => setMobileMenuOpen(false)}>Home</Link>
+          <Link to="/workshops" style={mobileLinkStyle} onClick={() => setMobileMenuOpen(false)}>Workshops</Link>
+          {user ? (
+            <>
+              <Link to="/dashboard" style={mobileLinkStyle} onClick={() => setMobileMenuOpen(false)}>Dashboard</Link>
+              <div style={{
+                padding: '12px 0',
+                borderTop: '1px solid var(--dark-border)',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '12px'
+              }}>
+                <span style={{ fontSize: '0.9rem', color: 'var(--text-secondary-dark)' }}>
+                  Logged in as: <strong>{user.name}</strong> ({isAdmin ? 'Admin' : 'User'})
+                </span>
+                <button onClick={handleLogout} className="btn btn-secondary" style={{ width: '100%' }}>
+                  <LogOut size={16} /> Log Out
+                </button>
+              </div>
+            </>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginTop: '10px' }}>
+              <Link to="/login" className="btn btn-secondary" style={{ width: '100%' }} onClick={() => setMobileMenuOpen(false)}>Log In</Link>
+              <Link to="/register" className="btn btn-primary" style={{ width: '100%' }} onClick={() => setMobileMenuOpen(false)}>Sign Up</Link>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Embedded CSS for responsive menu styling without Tailwind */}
+      <style>{`
+        @media (min-width: 768px) {
+          .desktop-menu-container {
+            display: flex !important;
+          }
+          .mobile-toggle-btn {
+            display: none !important;
+          }
+        }
+      `}</style>
+    </nav>
+  );
+};
+
+const linkStyle = {
+  fontSize: '0.95rem',
+  fontWeight: '500',
+  color: 'var(--text-secondary-dark)',
+  transition: 'var(--transition-smooth)',
+  cursor: 'pointer'
+};
+
+const mobileLinkStyle = {
+  fontSize: '1.1rem',
+  fontWeight: '500',
+  color: 'var(--text-primary-dark)',
+  padding: '8px 0',
+  display: 'block'
 };
 
 export default Navbar;

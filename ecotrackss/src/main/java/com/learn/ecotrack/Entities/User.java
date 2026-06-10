@@ -56,6 +56,8 @@ public class User implements UserDetails {
 	@OneToMany(mappedBy ="user")
 	@JsonBackReference("user-enrollment")
 	private List<Enrollments> enrollment=new ArrayList<Enrollments>();
+	
+	
 	@Override
 	public Collection<? extends GrantedAuthority> getAuthorities() {
 		return Arrays.asList(new SimpleGrantedAuthority(role.getAppRole().toString()));

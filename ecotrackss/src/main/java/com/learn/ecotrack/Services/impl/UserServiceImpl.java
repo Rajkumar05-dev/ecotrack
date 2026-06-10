@@ -14,10 +14,8 @@ import com.learn.ecotrack.Repository.RoleRepository;
 import com.learn.ecotrack.Repository.UserRespository;
 import com.learn.ecotrack.Services.UserService;
 
-
-
 @Service
-public class UserServiceImpl implements UserService{
+public class UserServiceImpl implements UserService {
 	@Autowired
 	private ModelMapper modelMapper;
 
@@ -25,23 +23,23 @@ public class UserServiceImpl implements UserService{
 	private UserRespository userRespository;
 	@Autowired
 	private RoleRepository roleRepository;
-	 @Autowired
-	    private PasswordEncoder passwordEncoder;
+	@Autowired
+	private PasswordEncoder passwordEncoder;
+
 	@Override
 	public UserDto createUser(UserDto userDto) {
-		
-		 userDto.setPassword(
-		            passwordEncoder.encode(userDto.getPassword())
-		        );
-		User user = modelMapper.map(userDto,User.class);
 
-        // ✅ PASSWORD ENCODE HERE
-       
-		Role role = roleRepository.findByAppRole(AppRole.ROLE_USER).orElseThrow(()->new NotFoundException("Role not found"));
+		userDto.setPassword(passwordEncoder.encode(userDto.getPassword()));
+		User user = modelMapper.map(userDto, User.class);
+
+		// ✅ PASSWORD ENCODE HERE
+
+		Role role = roleRepository.findByAppRole(AppRole.ROLE_USER)
+				.orElseThrow(() -> new NotFoundException("Role not found"));
 		user.setRole(role);
 		User savedUser = userRespository.save(user);
-		UserDto  savedDto = modelMapper.map(savedUser, UserDto.class);
-		
+		UserDto savedDto = modelMapper.map(savedUser, UserDto.class);
+
 		return savedDto;
 	}
 
