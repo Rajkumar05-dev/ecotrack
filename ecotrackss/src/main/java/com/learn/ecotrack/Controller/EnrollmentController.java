@@ -1,10 +1,12 @@
 package com.learn.ecotrack.Controller;
 
+import java.util.List;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -39,6 +41,12 @@ public class EnrollmentController {
 	public ResponseEntity<EnrollmentsDto> addenroll( @PathVariable String userId, @PathVariable  int workShopId){
 		return ResponseEntity.ok(enrollmentService.enroll(userId,workShopId));
 	}
+
+	@GetMapping("/user/{userId}")
+	public ResponseEntity<List<EnrollmentsDto>> getUserEnrollments(@PathVariable String userId) {
+		return ResponseEntity.ok(enrollmentService.getUserEnrollments(userId));
+	}
+
 	@PostMapping("/confirm")
 	public ResponseEntity<String> confirmEnrollment(@RequestBody Map<String, String> payload)  throws RazorpayException {
 		boolean verified = razorpayService.verifyPayment(payload.get("razorpayOrderId"), payload.get("razorpayPaymentId"), payload.get("razorpaySignature"));

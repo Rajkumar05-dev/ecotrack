@@ -13,6 +13,7 @@ const Dashboard = () => {
   const [activeTab, setActiveTab] = useState('overview');
   const [recycleRequests, setRecycleRequests] = useState([]);
   const [adminRequests, setAdminRequests] = useState([]);
+  const [enrollments, setEnrollments] = useState([]);
   const [loading, setLoading] = useState(true);
 
   // Form State for new Request
@@ -43,13 +44,15 @@ const Dashboard = () => {
         setAdminRequests(adminData);
       } else {
         // Recycle requests for user
-        // If mock session, requests are in user.recycleRequests or we fetch it.
-        // Let's call api list or use the state in mockData.
-        // Since we mapped mock users, let's look at user details or mock requests.
-        // We will fallback to user.recycleRequests or mock requests filtered by user id.
         const mockRequests = await api.getAllRecycleRequestsAdmin();
         const userReqs = mockRequests.filter(r => r.user?.id === user.id);
         setRecycleRequests(userReqs.length > 0 ? userReqs : (user.recycleRequests || []));
+
+        // Load recent enrollments for current user
+        if (user?.id) {
+          const userEnrollments = await api.getUserEnrollments(user.id);
+          setEnrollments(Array.isArray(userEnrollments) ? userEnrollments : []);
+        }
       }
     } catch (err) {
       console.error('Error fetching dashboard data:', err);
@@ -298,6 +301,32 @@ const Dashboard = () => {
                         <p style={{ color: 'var(--text-secondary-dark)', fontSize: '0.9rem' }}>No logged requests found.</p>
                       )}
                     </div>
+
+                    {!isAdmin && (
+                      <div style={{ marginTop: '28px' }}>
+                        <h4 style={{ fontSize: '1.2rem', color: '#fff', marginBottom: '16px' }}>Your Recent Enrollments</h4>
+                        <div style={{ display: 'grid', gap: '14px' }}>
+                          {enrollments.slice(0, 4).map(enrollment => (
+                            <div key={enrollment.razorpayOrderId} className="glass" style={{ padding: '16px 20px', borderRadius: 'var(--radius-md)', border: '1px solid rgba(255,255,255,0.06)' }}>
+                              <div style={{ display: 'flex', justifyContent: 'space-between', gap: '10px', alignItems: 'center' }}>
+                                <div>
+                                  <strong style={{ color: '#fff', display: 'block', fontSize: '0.95rem' }}>{enrollment.workShop?.name || 'Workshop'}</strong>
+                                  <span style={{ color: 'var(--text-secondary-dark)', fontSize: '0.8rem' }}>
+                                    ₹{enrollment.amount} • {new Date(enrollment.enrolledAt).toLocaleDateString()}
+                                  </span>
+                                </div>
+                                <span className="badge badge-approved" style={{ padding: '6px 10px', fontSize: '0.75rem' }}>
+                                  {enrollment.paymentStatus || 'PENDING'}
+                                </span>
+                              </div>
+                            </div>
+                          ))}
+                          {enrollments.length === 0 && (
+                            <p style={{ color: 'var(--text-secondary-dark)', fontSize: '0.9rem' }}>No recent enrollments yet. Enroll in a workshop to see it here.</p>
+                          )}
+                        </div>
+                      </div>
+                    )}
                   </div>
 
                   {/* Right Column: Educational banner / Stats card */}

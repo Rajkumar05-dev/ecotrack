@@ -69,13 +69,19 @@ const Workshops = () => {
       setActiveOrder(order);
       setActiveWorkshop(workshop);
 
-      // Step 2: Dynamically load Razorpay SDK or Fallback to Simulation
-      const rzpLoaded = await loadRazorpayScript();
-      if (rzpLoaded && window.Razorpay && !order.razorpayOrderId.includes('mock')) {
-        openRazorpaySDK(order, workshop);
+      // Step 2: Load Razorpay JS and the public key from backend
+      const [config, rzpLoaded] = await Promise.all([
+        api.getRazorpayKey().catch(() => ({ key: 'rzp_test_S060WMnc2eFoWe' })),
+        loadRazorpayScript()
+      ]);
+      const key = config?.key || 'rzp_test_S060WMnc2eFoWe';
+      const isMockOrder = order.razorpayOrderId?.startsWith('mock_');
+
+      console.log('Razorpay init:', { rzpLoaded, hasRazorpay: !!window.Razorpay, orderId: order.razorpayOrderId, isMockOrder, key });
+      if (rzpLoaded && window.Razorpay && !isMockOrder && order.razorpayOrderId) {
+        openRazorpaySDK(order, workshop, key);
       } else {
-        // Trigger simulation if Razorpay fails or we are in mock mode
-        console.log("Triggering fallback simulated payment checkout...");
+        console.log("Razorpay unavailable; showing simulated payment modal...");
       }
     } catch (err) {
       alert('Failed to initiate enrollment: ' + err.message);
@@ -98,10 +104,10 @@ const Workshops = () => {
   };
 
   // Open the real Razorpay payment window
-  const openRazorpaySDK = (order, workshop) => {
+  const openRazorpaySDK = (order, workshop, key) => {
     const options = {
-      key: "rzp_test_S060WMnc2eFoWe", // Test API Key
-      amount: order.amount * 100, // paise
+      key: key || "rzp_test_S060WMnc2eFoWe",
+      amount: order.amount * 100,
       currency: "INR",
       name: "EcoTrack",
       description: `Enroll: ${workshop.name}`,
@@ -136,18 +142,29 @@ const Workshops = () => {
         }
       }
     };
-    const rzp = new window.Razorpay(options);
-    rzp.open();
+
+    try {
+      const rzp = new window.Razorpay(options);
+      rzp.open();
+    } catch (error) {
+      console.error('Unable to initialize Razorpay checkout', error);
+      alert('Razorpay checkout failed to open. Please try again.');
+    }
   };
 
-  const handleSimulatePayment = async () => {
+  const handleSimulatePayment = async (order = activeOrder, workshop = activeWorkshop) => {
+    if (!order || !workshop) {
+      alert('Unable to simulate payment: missing order or workshop details.');
+      return;
+    }
+
     setSimulatingPayment(true);
     // Simulate API roundtrip
     setTimeout(async () => {
       try {
-        await api.confirmEnrollment(activeOrder.razorpayOrderId, 'pay_mock_' + Date.now(), 'sig_mock_' + Date.now());
-        completeEnrollmentLocal(activeWorkshop.id);
-        alert(`Booking confirmed for "${activeWorkshop.name}"!`);
+        await api.confirmEnrollment(order.razorpayOrderId, 'pay_mock_' + Date.now(), 'sig_mock_' + Date.now());
+        completeEnrollmentLocal(workshop.id);
+        alert(`Booking confirmed for "${workshop.name}"!`);
       } catch (err) {
         alert('Simulated booking failed: ' + err.message);
       } finally {

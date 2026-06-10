@@ -1,31 +1,24 @@
 package com.learn.ecotrack.Controller;
 
+import java.util.Collections;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.razorpay.RazorpayClient;
-import com.razorpay.RazorpayException;
-
 @RestController
-@RequestMapping("/payment") 
+@RequestMapping("/payment")
+@CrossOrigin
 public class PaymentController {
-	@Value("${razorpay.key}")
- private String  razorpayKey;
-	@Value("${razorpay.secret}")
- private String razorpaySecret;
-	
-	@PostMapping("/payment")
-	public ResponseEntity<Map<String, String>> payment(){
-		try {
-			RazorpayClient razorpayClient = new RazorpayClient(razorpayKey, razorpaySecret);
-		}catch(RazorpayException e) {
-			e.printStackTrace();
-		}
-		return null;
-	}
+    @Value("${razorpay.key}")
+    private String razorpayKey;
+
+    @GetMapping("/config")
+    public ResponseEntity<Map<String, String>> getConfig() {
+        return ResponseEntity.ok(Collections.singletonMap("key", razorpayKey));
+    }
 }

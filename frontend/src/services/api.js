@@ -326,11 +326,18 @@ const handleMockRequest = (endpoint, options) => {
           workShop: workshop,
           enrolledAt: new Date().toISOString(),
           amount: parseFloat(workshop.price),
-          razorpayOrderId: 'order_' + Math.random().toString(36).substr(2, 9),
+          razorpayOrderId: 'mock_order_' + Math.random().toString(36).substr(2, 9),
           paymentStatus: 'PENDING'
         };
         mockData.enrollments.push(order);
         resolve(order);
+        return;
+      }
+
+      if (endpoint.startsWith('/enroll/user/') && options.method === 'GET') {
+        const userId = endpoint.split('/').pop();
+        const userEnrollments = mockData.enrollments.filter(e => e.user?.id === userId);
+        resolve(userEnrollments);
         return;
       }
 
@@ -423,5 +430,8 @@ export const api = {
   confirmEnrollment: (razorpayOrderId, razorpayPaymentId, razorpaySignature) => request('/enroll/confirm', {
     method: 'POST',
     body: JSON.stringify({ razorpayOrderId, razorpayPaymentId, razorpaySignature })
-  })
+  }),
+
+  getUserEnrollments: (userId) => request(`/enroll/user/${userId}`),
+  getRazorpayKey: () => request('/payment/config')
 };

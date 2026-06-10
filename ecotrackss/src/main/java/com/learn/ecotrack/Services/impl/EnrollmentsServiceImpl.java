@@ -4,6 +4,9 @@ import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
 import com.learn.ecotrack.Dtos.EnrollmentsDto;
 import com.learn.ecotrack.Entities.Enrollments;
 import com.learn.ecotrack.Entities.User;
@@ -70,6 +73,14 @@ public class EnrollmentsServiceImpl  implements EnrollmentService{
 		
 		enrollmentRepository.save(enrollment);
 		
+	}
+
+	@Override
+	public List<EnrollmentsDto> getUserEnrollments(String userId) {
+		return enrollmentRepository.findByUserIdOrderByEnrolledAtDesc(userId)
+				.stream()
+				.map(enrollment -> modelMapper.map(enrollment, EnrollmentsDto.class))
+				.collect(Collectors.toList());
 	}
 
 }
