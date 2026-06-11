@@ -203,17 +203,32 @@ const Dashboard = () => {
     <div className="dashboard-layout">
       
       {/* Sidebar Navigation */}
-      <aside className="dashboard-sidebar">
+      <aside className="dashboard-sidebar" style={{ background: isAdmin ? 'rgba(59, 130, 246, 0.05)' : undefined }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '32px' }}>
           <div style={{
-            background: 'rgba(16, 185, 129, 0.1)',
+            background: isAdmin ? 'rgba(59, 130, 246, 0.2)' : 'rgba(16, 185, 129, 0.1)',
             padding: '10px',
             borderRadius: 'var(--radius-md)'
           }}>
-            <User size={20} color="var(--primary)" />
+            <User size={20} color={isAdmin ? '#3b82f6' : 'var(--primary)'} />
           </div>
           <div>
-            <h4 style={{ color: '#fff', fontSize: '1.05rem' }}>{user.name}</h4>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <h4 style={{ color: '#fff', fontSize: '1.05rem', margin: 0 }}>{user.name}</h4>
+              {isAdmin && (
+                <span style={{
+                  background: '#3b82f6',
+                  color: '#fff',
+                  fontSize: '0.6rem',
+                  padding: '3px 8px',
+                  borderRadius: 'var(--radius-sm)',
+                  fontWeight: '700',
+                  textTransform: 'uppercase'
+                }}>
+                  Admin
+                </span>
+              )}
+            </div>
             <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary-dark)' }}>
               {isAdmin ? 'System Administrator' : 'Platform Contributor'}
             </span>
@@ -246,18 +261,68 @@ const Dashboard = () => {
           )}
 
           {isAdmin && (
-            <li 
-              className={`sidebar-item ${activeTab === 'admin' ? 'active' : ''}`}
-              onClick={() => setActiveTab('admin')}
-            >
-              <ShieldAlert size={18} /> Manage Pickups ({adminRequests.filter(r => r.requestStatus === 'PENDING').length})
-            </li>
+            <>
+              <li 
+                className={`sidebar-item ${activeTab === 'admin' ? 'active' : ''}`}
+                onClick={() => setActiveTab('admin')}
+                style={{ borderLeft: '3px solid #3b82f6' }}
+              >
+                <ShieldAlert size={18} /> Manage Pickups ({adminRequests.filter(r => r.requestStatus === 'PENDING').length})
+              </li>
+              <li 
+                className={`sidebar-item ${activeTab === 'admin-workshops' ? 'active' : ''}`}
+                onClick={() => setActiveTab('admin-workshops')}
+                style={{ borderLeft: '3px solid #3b82f6' }}
+              >
+                <Calendar size={18} /> Manage Workshops
+              </li>
+              <li 
+                className={`sidebar-item ${activeTab === 'admin-reports' ? 'active' : ''}`}
+                onClick={() => setActiveTab('admin-reports')}
+                style={{ borderLeft: '3px solid #3b82f6' }}
+              >
+                <BarChart3 size={18} /> Reports & Analytics
+              </li>
+            </>
           )}
         </ul>
       </aside>
 
       {/* Main Content Area */}
       <main className="dashboard-content">
+        {isAdmin && (
+          <div style={{
+            background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.15), rgba(59, 130, 246, 0.05))',
+            border: '1px solid rgba(59, 130, 246, 0.3)',
+            borderRadius: 'var(--radius-lg)',
+            padding: '20px 24px',
+            marginBottom: '32px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '16px'
+          }}>
+            <div style={{
+              background: '#3b82f6',
+              color: '#fff',
+              width: '40px',
+              height: '40px',
+              borderRadius: '50%',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              flexShrink: 0
+            }}>
+              <ShieldAlert size={20} />
+            </div>
+            <div>
+              <h3 style={{ color: '#3b82f6', margin: 0, fontSize: '1.1rem', fontWeight: '700' }}>Admin Dashboard</h3>
+              <p style={{ color: 'var(--text-secondary-dark)', margin: '4px 0 0 0', fontSize: '0.85rem' }}>
+                Manage recycling requests, workshops, and view system analytics
+              </p>
+            </div>
+          </div>
+        )}
+
         {loading ? (
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '60vh', color: 'var(--text-secondary-dark)', gap: '15px' }}>
             <Loader size={40} className="spin" />
@@ -716,6 +781,131 @@ const Dashboard = () => {
                       No submitted requests in system database.
                     </div>
                   )}
+                </div>
+              </div>
+            )}
+
+            {/* ADMIN - MANAGE WORKSHOPS TAB */}
+            {activeTab === 'admin-workshops' && isAdmin && (
+              <div>
+                <h3 style={{ fontSize: '1.8rem', color: '#fff', marginBottom: '24px' }}>Manage Workshops</h3>
+                
+                <button style={{
+                  background: '#3b82f6',
+                  color: '#fff',
+                  border: 'none',
+                  padding: '12px 24px',
+                  borderRadius: 'var(--radius-md)',
+                  fontSize: '1rem',
+                  fontWeight: '600',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  marginBottom: '24px'
+                }}>
+                  <Plus size={18} />
+                  Create New Workshop
+                </button>
+
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '20px' }}>
+                  {/* Placeholder workshop cards */}
+                  {[1, 2, 3].map(i => (
+                    <div key={i} className="glass" style={{ padding: '24px', borderRadius: 'var(--radius-lg)' }}>
+                      <h4 style={{ color: '#fff', marginTop: 0 }}>Workshop {i}</h4>
+                      <p style={{ color: 'var(--text-secondary-dark)', fontSize: '0.9rem' }}>
+                        Workshop title and description will appear here with pricing and scheduling options.
+                      </p>
+                      <div style={{ display: 'flex', gap: '8px', marginTop: '16px' }}>
+                        <button style={{
+                          flex: 1,
+                          background: 'rgba(59, 130, 246, 0.2)',
+                          color: '#3b82f6',
+                          border: '1px solid #3b82f6',
+                          padding: '8px',
+                          borderRadius: 'var(--radius-sm)',
+                          cursor: 'pointer',
+                          fontSize: '0.85rem',
+                          fontWeight: '600'
+                        }}>
+                          Edit
+                        </button>
+                        <button style={{
+                          flex: 1,
+                          background: 'rgba(239, 68, 68, 0.2)',
+                          color: '#ef4444',
+                          border: '1px solid #ef4444',
+                          padding: '8px',
+                          borderRadius: 'var(--radius-sm)',
+                          cursor: 'pointer',
+                          fontSize: '0.85rem',
+                          fontWeight: '600'
+                        }}>
+                          Delete
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* ADMIN - REPORTS & ANALYTICS TAB */}
+            {activeTab === 'admin-reports' && isAdmin && (
+              <div>
+                <h3 style={{ fontSize: '1.8rem', color: '#fff', marginBottom: '24px' }}>Reports & Analytics</h3>
+                
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '24px', marginBottom: '40px' }}>
+                  <div className="glass" style={{ padding: '24px', borderRadius: 'var(--radius-md)' }}>
+                    <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary-dark)' }}>Total Users</span>
+                    <h2 style={{ fontSize: '2.2rem', color: '#3b82f6', marginTop: '10px' }}>245</h2>
+                  </div>
+                  <div className="glass" style={{ padding: '24px', borderRadius: 'var(--radius-md)' }}>
+                    <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary-dark)' }}>Total Requests</span>
+                    <h2 style={{ fontSize: '2.2rem', color: '#10b981', marginTop: '10px' }}>{adminRequests.length}</h2>
+                  </div>
+                  <div className="glass" style={{ padding: '24px', borderRadius: 'var(--radius-md)' }}>
+                    <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary-dark)' }}>Total Workshops</span>
+                    <h2 style={{ fontSize: '2.2rem', color: '#f59e0b', marginTop: '10px' }}>12</h2>
+                  </div>
+                  <div className="glass" style={{ padding: '24px', borderRadius: 'var(--radius-md)' }}>
+                    <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary-dark)' }}>Carbon Saved (kg)</span>
+                    <h2 style={{ fontSize: '2.2rem', color: '#06b6d4', marginTop: '10px' }}>1,240</h2>
+                  </div>
+                </div>
+
+                <div className="glass" style={{ padding: '24px', borderRadius: 'var(--radius-lg)', marginBottom: '24px' }}>
+                  <h4 style={{ color: '#fff', marginTop: 0 }}>Request Status Distribution</h4>
+                  <div style={{ display: 'flex', gap: '20px', marginTop: '16px' }}>
+                    <div>
+                      <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary-dark)' }}>Pending</span>
+                      <div style={{ fontSize: '1.8rem', color: 'var(--warning)', marginTop: '8px' }}>
+                        {adminRequests.filter(r => r.requestStatus === 'PENDING').length}
+                      </div>
+                    </div>
+                    <div>
+                      <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary-dark)' }}>Approved</span>
+                      <div style={{ fontSize: '1.8rem', color: 'var(--success)', marginTop: '8px' }}>
+                        {adminRequests.filter(r => r.requestStatus === 'APPROVED').length}
+                      </div>
+                    </div>
+                    <div>
+                      <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary-dark)' }}>Rejected</span>
+                      <div style={{ fontSize: '1.8rem', color: '#ef4444', marginTop: '8px' }}>
+                        {adminRequests.filter(r => r.requestStatus === 'REJECTED').length}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="glass" style={{ padding: '24px', borderRadius: 'var(--radius-lg)' }}>
+                  <h4 style={{ color: '#fff', marginTop: 0 }}>Recent Activity</h4>
+                  <div style={{ marginTop: '16px', color: 'var(--text-secondary-dark)', fontSize: '0.9rem' }}>
+                    <p>📦 {adminRequests.filter(r => r.requestStatus === 'APPROVED').length} requests approved this month</p>
+                    <p>👥 15 new users registered</p>
+                    <p>🎓 3 new workshops created</p>
+                    <p>💚 Carbon offset: 1,240 kg CO₂e</p>
+                  </div>
                 </div>
               </div>
             )}

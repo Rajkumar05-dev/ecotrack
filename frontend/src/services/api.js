@@ -29,6 +29,14 @@ const mockData = {
       phoneNo: '9988776655',
       role: { roleId: 2, appRole: 'ROLE_ADMIN' },
       recycleRequests: []
+    },
+    {
+      id: 'mock-admin-id-3',
+      name: 'Rocky Admin',
+      email: 'rocky527@gmail.com',
+      phoneNo: '9988776655',
+      role: { roleId: 2, appRole: 'ROLE_ADMIN' },
+      recycleRequests: []
     }
   ],
   requests: [

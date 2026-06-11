@@ -17,7 +17,27 @@ const Navbar = () => {
   const isAdmin = user?.role?.appRole?.includes('ADMIN');
 
   return (
-    <nav className="glass" style={{
+    <>
+      {isAdmin && (
+        <div style={{
+          background: 'linear-gradient(90deg, #3b82f6 0%, #2563eb 100%)',
+          color: '#fff',
+          padding: '10px 40px',
+          textAlign: 'center',
+          fontWeight: '700',
+          fontSize: '0.95rem',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: '10px',
+          position: 'relative',
+          zIndex: 101
+        }}>
+          <Shield size={18} />
+          🛡️ ADMIN MODE ACTIVE - You have full system access
+        </div>
+      )}
+      <nav className="glass" style={{
       position: 'fixed',
       top: 0,
       left: 0,
@@ -69,13 +89,13 @@ const Navbar = () => {
                 gap: '8px',
                 padding: '6px 14px',
                 borderRadius: '999px',
-                background: 'rgba(255, 255, 255, 0.05)',
-                border: '1px solid var(--dark-border)',
+                background: isAdmin ? 'rgba(59, 130, 246, 0.15)' : 'rgba(255, 255, 255, 0.05)',
+                border: isAdmin ? '1px solid rgba(59, 130, 246, 0.5)' : '1px solid var(--dark-border)',
                 fontSize: '0.9rem'
               }}>
-                {isAdmin ? <Shield size={14} color="#34d399" /> : <User size={14} color="#34d399" />}
-                <span style={{ color: 'var(--text-secondary-dark)', fontWeight: 500 }}>
-                  {user.name}
+                {isAdmin ? <Shield size={14} color="#3b82f6" /> : <User size={14} color="#34d399" />}
+                <span style={{ color: isAdmin ? '#3b82f6' : 'var(--text-secondary-dark)', fontWeight: 500 }}>
+                  {isAdmin ? '🛡️ ADMIN' : user.name}
                 </span>
               </div>
               <button onClick={handleLogout} className="btn btn-secondary" style={{ padding: '8px 16px', fontSize: '0.85rem' }}>
@@ -110,7 +130,7 @@ const Navbar = () => {
       {mobileMenuOpen && (
         <div className="glass" style={{
           position: 'absolute',
-          top: '85px',
+          top: isAdmin ? '165px' : '85px',
           left: '20px',
           right: '20px',
           borderRadius: 'var(--radius-md)',
@@ -161,6 +181,7 @@ const Navbar = () => {
         }
       `}</style>
     </nav>
+    </>
   );
 };
 
