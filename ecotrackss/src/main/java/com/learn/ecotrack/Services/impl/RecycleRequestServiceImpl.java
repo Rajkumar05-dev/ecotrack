@@ -32,7 +32,11 @@ public class RecycleRequestServiceImpl implements RecycleRequestService {
 	User user = userRespository.findById(userId).orElseThrow(()->new NotFoundException("user not found"));
 	 RecycleRequest request = modelMapper.map(recycleRequestDto,RecycleRequest.class); 
 	 request.setUser(user);
-	 request.setRequestStatus(RequestStatus.PENDING);
+	// Ensure unit is set (default to kg) and auto-approve requests on submission
+	if (request.getUnit() == null || request.getUnit().isBlank()) {
+		request.setUnit("kg");
+	}
+	request.setRequestStatus(RequestStatus.APPROVED);
 	 RecycleRequest savedRequest= recycleRequestRepository.save(request);
 		return modelMapper.map(savedRequest, RecycleRequestDto.class);
 	}
@@ -64,6 +68,17 @@ RecycleRequest	saved	=recycleRequestRepository.save(request);
 		request.setItemImage(image);
 		RecycleRequest saved = recycleRequestRepository.save(request);
 		return saved.getItemImage();
+	}
+
+
+	@Override
+	public java.util.List<RecycleRequestDto> getRequestsByUser(String userId) {
+		java.util.List<RecycleRequest> list = recycleRequestRepository.findByUserId(userId);
+		java.util.List<RecycleRequestDto> dtoList = new java.util.ArrayList<>();
+		for (RecycleRequest r : list) {
+			dtoList.add(modelMapper.map(r, RecycleRequestDto.class));
+		}
+		return dtoList;
 	}
 
 }

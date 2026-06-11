@@ -10,8 +10,8 @@ const mockData = {
       phoneNo: '9876543210',
       role: { roleId: 1, appRole: 'ROLE_USER' },
       recycleRequests: [
-        { id: 101, itemType: 'Plastic Bottles', quantity: 120, itemImage: null, requestStatus: 'APPROVED', reason: 'Pick up scheduled for Friday' },
-        { id: 102, itemType: 'Cardboard Boxes', quantity: 15, itemImage: null, requestStatus: 'PENDING', reason: null },
+        { id: 101, itemType: 'Plastic Bottles', quantity: 120, unit: 'pieces', itemImage: null, requestStatus: 'APPROVED', reason: 'Pick up scheduled for Friday' },
+        { id: 102, itemType: 'Cardboard Boxes', quantity: 15, unit: 'kg', itemImage: null, requestStatus: 'PENDING', reason: null },
       ]
     },
     {
@@ -21,12 +21,20 @@ const mockData = {
       phoneNo: '9999988888',
       role: { roleId: 2, appRole: 'ROLE_ADMIN' },
       recycleRequests: []
+    },
+    {
+      id: 'mock-admin-id-2',
+      name: 'Rocky Admin',
+      email: 'rocky5267@gmail.com',
+      phoneNo: '9988776655',
+      role: { roleId: 2, appRole: 'ROLE_ADMIN' },
+      recycleRequests: []
     }
   ],
   requests: [
-    { id: 101, itemType: 'Plastic Bottles', quantity: 120, itemImage: 'https://images.unsplash.com/photo-1532996122724-e3c354a0b15b?w=500', requestStatus: 'APPROVED', reason: 'Verified weight 5.5kg.', user: { id: 'mock-user-id-1', name: 'Raj Chauhan', email: 'raj@ecotrack.com' } },
-    { id: 102, itemType: 'Cardboard Boxes', quantity: 15, itemImage: 'https://images.unsplash.com/photo-1595079676339-1534801ad6cf?w=500', requestStatus: 'PENDING', reason: null, user: { id: 'mock-user-id-1', name: 'Raj Chauhan', email: 'raj@ecotrack.com' } },
-    { id: 103, itemType: 'E-Waste (Old Monitor)', quantity: 1, itemImage: 'https://images.unsplash.com/photo-1555664424-778a1e5e1b48?w=500', requestStatus: 'PENDING', reason: null, user: { id: 'mock-user-id-2', name: 'Amit Sharma', email: 'amit@ecotrack.com' } }
+    { id: 101, itemType: 'Plastic Bottles', quantity: 120, unit: 'pieces', itemImage: 'https://images.unsplash.com/photo-1532996122724-e3c354a0b15b?w=500', requestStatus: 'APPROVED', reason: 'Verified weight 5.5kg.', user: { id: 'mock-user-id-1', name: 'Raj Chauhan', email: 'raj@ecotrack.com' } },
+    { id: 102, itemType: 'Cardboard Boxes', quantity: 15, unit: 'kg', itemImage: 'https://images.unsplash.com/photo-1595079676339-1534801ad6cf?w=500', requestStatus: 'PENDING', reason: null, user: { id: 'mock-user-id-1', name: 'Raj Chauhan', email: 'raj@ecotrack.com' } },
+    { id: 103, itemType: 'E-Waste (Old Monitor)', quantity: 1, unit: 'pieces', itemImage: 'https://images.unsplash.com/photo-1555664424-778a1e5e1b48?w=500', requestStatus: 'PENDING', reason: null, user: { id: 'mock-user-id-2', name: 'Amit Sharma', email: 'amit@ecotrack.com' } }
   ],
   workshops: [
     {
@@ -136,7 +144,7 @@ const handleMockRequest = (endpoint, options) => {
             phoneNo: '9998887776',
             role: { 
               roleId: isEmailAdmin ? 2 : 1, 
-              appRole: isEmailAdmin ? 'AppRole.ROLE_ADMIN' : 'ROLE_USER' 
+              appRole: isEmailAdmin ? 'ROLE_ADMIN' : 'ROLE_USER' 
             },
             recycleRequests: []
           };
@@ -237,8 +245,9 @@ const handleMockRequest = (endpoint, options) => {
           id: mockData.requests.length + 101,
           itemType: body.itemType,
           quantity: body.quantity,
+          unit: body.unit || 'kg',
           itemImage: body.itemImage || null,
-          requestStatus: 'PENDING',
+          requestStatus: 'APPROVED',
           reason: null,
           user: { id: userId, name: 'Current User' }
         };
@@ -251,6 +260,14 @@ const handleMockRequest = (endpoint, options) => {
           u.recycleRequests.push(newReq);
         }
         resolve(newReq);
+        return;
+      }
+
+      // GET /request/user/{userId}
+      if (endpoint.startsWith('/request/user/') && (!options.method || options.method === 'GET')) {
+        const userId = endpoint.split('/').pop();
+        const list = mockData.requests.filter(r => r.user?.id === userId);
+        resolve(list);
         return;
       }
 
@@ -405,21 +422,23 @@ export const api = {
     method: 'PUT'
   }),
 
+  getUserRecycleRequests: (userId) => request(`/request/user/${userId}`),
+
   rejectRecycleRequest: (id, reason) => request(`/request/reject/${id}?reason=${encodeURIComponent(reason)}`, {
     method: 'PUT'
   }),
 
   // Admin special endpoints
   getAllRecycleRequestsAdmin: () => {
-    // If backend is down or mock mode, return mock list.
-    // In backend, requests are accessed through lists, or we mock it.
     if (useMock) {
       return Promise.resolve(mockData.requests);
     }
-    // Backend doesn't have a direct GET /request endpoint, so let's fallback to mock requests
-    // or fetch from an all-users endpoint if it exists. Since there isn't one, we will use mock or
-    // fetch user details. Let's return mock requests for admin panel, or resolve it gracefully.
-    return Promise.resolve(mockData.requests);
+
+    return request('/request')
+      .catch((err) => {
+        console.warn('Admin request list endpoint unavailable, falling back to mock requests.', err);
+        return mockData.requests;
+      });
   },
 
   // Enrollments & payments

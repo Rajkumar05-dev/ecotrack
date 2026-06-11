@@ -3,6 +3,8 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import Home from './pages/Home';
 import Login from './pages/Login';
 import Register from './pages/Register';
+import AdminLogin from './pages/AdminLogin';
+import AdminRegister from './pages/AdminRegister';
 import Dashboard from './pages/Dashboard';
 import Workshops from './pages/Workshops';
 import Navbar from './components/Navbar';
@@ -92,14 +94,30 @@ function App() {
           <main className="main-content">
             <Routes>
               <Route path="/" element={<Home />} />
+              
+              {/* User Authentication */}
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
+              
+              {/* Admin Authentication */}
+              <Route path="/admin-login" element={<AdminLogin />} />
+              <Route path="/admin-register" element={<AdminRegister />} />
               
               {/* Authenticated Dashboard */}
               <Route 
                 path="/dashboard" 
                 element={
                   <ProtectedRoute>
+                    <Dashboard />
+                  </ProtectedRoute>
+                } 
+              />
+              
+              {/* Admin Dashboard (accessible only to admins) */}
+              <Route 
+                path="/admin-dashboard" 
+                element={
+                  <ProtectedRoute allowedRoles={['ADMIN']}>
                     <Dashboard />
                   </ProtectedRoute>
                 } 

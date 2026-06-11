@@ -14,11 +14,15 @@ const Dashboard = () => {
   const [recycleRequests, setRecycleRequests] = useState([]);
   const [adminRequests, setAdminRequests] = useState([]);
   const [enrollments, setEnrollments] = useState([]);
+  const [selectedEnrollment, setSelectedEnrollment] = useState(null);
+  const [showEnrollmentModal, setShowEnrollmentModal] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [requestLoadError, setRequestLoadError] = useState('');
 
   // Form State for new Request
   const [itemType, setItemType] = useState('Plastic Bottles');
   const [quantity, setQuantity] = useState('');
+  const [unit, setUnit] = useState('kg');
   const [selectedFile, setSelectedFile] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
   const [submittingRequest, setSubmittingRequest] = useState(false);
@@ -37,16 +41,32 @@ const Dashboard = () => {
   }, [user]);
 
   const fetchData = async () => {
+    if (!user?.id) {
+      setLoading(false);
+      return;
+    }
+
     try {
       setLoading(true);
       if (isAdmin) {
         const adminData = await api.getAllRecycleRequestsAdmin();
         setAdminRequests(adminData);
       } else {
-        // Recycle requests for user
-        const mockRequests = await api.getAllRecycleRequestsAdmin();
-        const userReqs = mockRequests.filter(r => r.user?.id === user.id);
-        setRecycleRequests(userReqs.length > 0 ? userReqs : (user.recycleRequests || []));
+        // Recycle requests for user (prefer server endpoint)
+        try {
+          const userReqs = await api.getUserRecycleRequests(user.id);
+          if (!Array.isArray(userReqs)) {
+            throw new Error('Unexpected user requests response');
+          }
+          setRecycleRequests(userReqs);
+          setRequestLoadError('');
+        } catch (e) {
+          console.error('Error loading user recycle requests:', e);
+          setRequestLoadError('Unable to load your pickup history at the moment.');
+          const mockRequests = await api.getAllRecycleRequestsAdmin();
+          const filtered = mockRequests.filter(r => r.user?.id === user.id);
+          setRecycleRequests(filtered.length > 0 ? filtered : (user.recycleRequests || []));
+        }
 
         // Load recent enrollments for current user
         if (user?.id) {
@@ -73,6 +93,16 @@ const Dashboard = () => {
     }
   };
 
+  const openEnrollmentDetails = (enrollment) => {
+    setSelectedEnrollment(enrollment);
+    setShowEnrollmentModal(true);
+  };
+
+  const closeEnrollmentDetails = () => {
+    setSelectedEnrollment(null);
+    setShowEnrollmentModal(false);
+  };
+
   const handleSubmitRequest = async (e) => {
     e.preventDefault();
     if (!quantity || isNaN(quantity) || parseInt(quantity) <= 0) {
@@ -89,27 +119,31 @@ const Dashboard = () => {
       const payload = {
         itemType,
         quantity: parseInt(quantity),
+        unit,
         itemImage: null
       };
 
       const newRequest = await api.submitRecycleRequest(user.id, payload);
+      let requestToAdd = { ...newRequest };
 
       // Step 2: Upload image if selected
       if (selectedFile) {
         try {
-          await api.uploadRequestImage(newRequest.id, selectedFile);
+          const imageResult = await api.uploadRequestImage(newRequest.id, selectedFile);
+          requestToAdd = { ...requestToAdd, itemImage: imageResult?.imageName || requestToAdd.itemImage };
         } catch (imgErr) {
           console.warn('Image upload failed but request was saved:', imgErr);
         }
       }
 
+      setRecycleRequests(prev => [requestToAdd, ...prev]);
       setRequestSuccess('Recycle request submitted successfully! Pending approval.');
       setItemType('Plastic Bottles');
       setQuantity('');
       setSelectedFile(null);
       setImagePreview(null);
       
-      // Refresh list
+      // Refresh list and counts
       fetchData();
     } catch (err) {
       setRequestError(err.message || 'Submission failed.');
@@ -154,6 +188,16 @@ const Dashboard = () => {
   
   const totalItemsRecycled = approvedRequests.reduce((acc, curr) => acc + curr.quantity, 0);
   const carbonOffset = (totalItemsRecycled * 0.14).toFixed(1); // 0.14kg CO2 saved per item
+
+  // Totals grouped by unit (kg / pieces / ton)
+  const totalsByUnit = approvedRequests.reduce((acc, curr) => {
+    const u = curr.unit || 'pieces';
+    acc[u] = (acc[u] || 0) + curr.quantity;
+    return acc;
+  }, {});
+
+  // For UI: regular users should see all their requests (pending + approved + rejected)
+  const userVisibleRequests = isAdmin ? adminRequests : recycleRequests;
 
   return (
     <div className="dashboard-layout">
@@ -251,7 +295,15 @@ const Dashboard = () => {
                     <>
                       <div className="glass" style={{ padding: '24px', borderRadius: 'var(--radius-md)' }}>
                         <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary-dark)' }}>Items Recycled</span>
-                        <h2 style={{ fontSize: '2.2rem', color: 'var(--primary)', marginTop: '10px' }}>{totalItemsRecycled}</h2>
+                        <div style={{ marginTop: '10px' }}>
+                          {Object.keys(totalsByUnit).length === 0 ? (
+                            <h2 style={{ fontSize: '2.2rem', color: 'var(--primary)', marginTop: '10px' }}>0</h2>
+                          ) : (
+                            Object.entries(totalsByUnit).map(([u, val]) => (
+                              <div key={u} style={{ color: '#fff', fontSize: '1.05rem', marginTop: '6px' }}>{val} {u}</div>
+                            ))
+                          )}
+                        </div>
                       </div>
                       <div className="glass" style={{ padding: '24px', borderRadius: 'var(--radius-md)' }}>
                         <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary-dark)' }}>Carbon Offset</span>
@@ -275,12 +327,12 @@ const Dashboard = () => {
                     </h4>
                     
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
-                      {(isAdmin ? adminRequests : recycleRequests).slice(0, 4).map(req => (
+                      {userVisibleRequests.slice(0, 4).map(req => (
                         <div key={req.id} className="glass" style={{ padding: '16px 20px', borderRadius: 'var(--radius-md)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                           <div>
                             <strong style={{ color: '#fff', display: 'block', fontSize: '0.95rem' }}>{req.itemType}</strong>
                             <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary-dark)' }}>
-                              Quantity: {req.quantity} items {isAdmin && `• User: ${req.user?.name || 'Unknown'}`}
+                              Quantity: {req.quantity} {req.unit || 'items'} {isAdmin && `• User: ${req.user?.name || 'Unknown'}`}
                             </span>
                             {req.reason && (
                               <p style={{ margin: '6px 0 0 0', fontSize: '0.8rem', color: 'var(--danger)' }}>
@@ -307,7 +359,7 @@ const Dashboard = () => {
                         <h4 style={{ fontSize: '1.2rem', color: '#fff', marginBottom: '16px' }}>Your Recent Enrollments</h4>
                         <div style={{ display: 'grid', gap: '14px' }}>
                           {enrollments.slice(0, 4).map(enrollment => (
-                            <div key={enrollment.razorpayOrderId} className="glass" style={{ padding: '16px 20px', borderRadius: 'var(--radius-md)', border: '1px solid rgba(255,255,255,0.06)' }}>
+                            <div key={enrollment.razorpayOrderId} onClick={() => openEnrollmentDetails(enrollment)} className="glass" style={{ padding: '16px 20px', borderRadius: 'var(--radius-md)', border: '1px solid rgba(255,255,255,0.06)', cursor: 'pointer' }}>
                               <div style={{ display: 'flex', justifyContent: 'space-between', gap: '10px', alignItems: 'center' }}>
                                 <div>
                                   <strong style={{ color: '#fff', display: 'block', fontSize: '0.95rem' }}>{enrollment.workShop?.name || 'Workshop'}</strong>
@@ -404,16 +456,49 @@ const Dashboard = () => {
                         </select>
                       </div>
 
-                      <div className="form-group">
-                        <label>Item Quantity (Units)</label>
-                        <input 
-                          type="number" 
-                          className="form-input"
-                          placeholder="e.g. 50"
-                          value={quantity}
-                          onChange={(e) => setQuantity(e.target.value)}
-                          required
-                        />
+                      <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                        <div className="quantity-input" style={{ display: 'flex', alignItems: 'center', background: 'rgba(255,255,255,0.02)', padding: '6px', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.04)' }}>
+                          <button type="button" onClick={() => { setQuantity(prev => String(Math.max(0, (parseInt(prev||'0')||0) - 1))); }} className="qty-btn" aria-label="Decrease" style={{ padding: '6px 8px', border: 'none', background: 'transparent', color: 'var(--text-secondary-dark)', cursor: 'pointer', borderRadius: '8px' }}>▾</button>
+                          <input
+                            type="text"
+                            inputMode="numeric"
+                            pattern="[0-9]*"
+                            className="form-input"
+                            placeholder="e.g. 50"
+                            value={quantity}
+                            onChange={(e) => {
+                              const raw = e.target.value || '';
+                              const v = Array.from(raw).filter(ch => ch >= '0' && ch <= '9').join('');
+                              setQuantity(v);
+                            }}
+                            required
+                            style={{ width: '84px', textAlign: 'center', background: 'transparent', border: 'none', color: '#fff', fontSize: '1rem' }}
+                          />
+                          <button type="button" onClick={() => { setQuantity(prev => String((parseInt(prev||'0')||0) + 1)); }} className="qty-btn" aria-label="Increase" style={{ padding: '6px 8px', border: 'none', background: 'transparent', color: 'var(--text-secondary-dark)', cursor: 'pointer', borderRadius: '8px' }}>▴</button>
+                        </div>
+                        <div className="unit-toggle" role="radiogroup" aria-label="Unit selector" style={{ display: 'flex', gap: '8px' }}>
+                          {['kg','pieces','ton'].map(u => (
+                            <button
+                              key={u}
+                              type="button"
+                              aria-pressed={unit === u}
+                              className={`unit-btn ${unit === u ? 'active' : ''}`}
+                              onClick={() => setUnit(u)}
+                              style={{
+                                padding: '8px 12px',
+                                borderRadius: '8px',
+                                border: '1px solid rgba(255,255,255,0.06)',
+                                background: unit === u ? 'linear-gradient(90deg, #0ea5a3, #06b6d4)' : 'transparent',
+                                color: unit === u ? '#fff' : 'var(--text-secondary-dark)',
+                                cursor: 'pointer',
+                                minWidth: '72px',
+                                fontSize: '0.9rem'
+                              }}
+                            >
+                              {u}
+                            </button>
+                          ))}
+                        </div>
                       </div>
 
                       <div className="form-group">
@@ -456,12 +541,12 @@ const Dashboard = () => {
                     <h3 style={{ fontSize: '1.5rem', color: '#fff', marginBottom: '24px' }}>Submission Log</h3>
                     
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
-                      {recycleRequests.map(req => (
+                      {userVisibleRequests.map(req => (
                         <div key={req.id} className="glass" style={{ padding: '20px', borderRadius: 'var(--radius-md)' }}>
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '10px' }}>
                             <div>
                               <h4 style={{ color: '#fff', margin: 0 }}>{req.itemType}</h4>
-                              <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary-dark)' }}>Quantity: {req.quantity} items</span>
+                              <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary-dark)' }}>Quantity: {req.quantity} {req.unit || 'items'}</span>
                             </div>
                             <span className={`badge ${
                               req.requestStatus === 'APPROVED' ? 'badge-approved' : 
@@ -566,9 +651,9 @@ const Dashboard = () => {
                             </span>
                           </div>
                           
-                          <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary-dark)', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                            <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary-dark)', display: 'flex', flexDirection: 'column', gap: '4px' }}>
                             <span><strong>Submitted by:</strong> {req.user?.name || 'Test User'} ({req.user?.email || 'N/A'})</span>
-                            <span><strong>Quantity:</strong> {req.quantity} units</span>
+                            <span><strong>Quantity:</strong> {req.quantity} {req.unit || 'units'}</span>
                             {req.reason && <span><strong>Notes/Reason:</strong> "{req.reason}"</span>}
                           </div>
                         </div>
@@ -638,6 +723,34 @@ const Dashboard = () => {
         )}
       </main>
 
+      {showEnrollmentModal && selectedEnrollment && (
+        <div className="modal-overlay">
+          <div className="glass modal-content" style={{ maxWidth: '600px' }}>
+            <button onClick={closeEnrollmentDetails} style={{ position: 'absolute', top: '20px', right: '20px', background: 'none', border: 'none', color: 'var(--text-secondary-dark)', cursor: 'pointer' }}>
+              <XCircle size={20} />
+            </button>
+            <h3 style={{ color: '#fff', marginBottom: '8px' }}>{selectedEnrollment.workShop?.name || 'Enrollment Details'}</h3>
+            <p style={{ color: 'var(--text-secondary-dark)', marginTop: 0 }}>{selectedEnrollment.workShop?.description}</p>
+            <div style={{ display: 'flex', gap: '20px', marginTop: '16px' }}>
+              <div style={{ flex: 1 }}>
+                <p style={{ color: 'var(--text-secondary-dark)', margin: 0 }}><strong>Date:</strong> {selectedEnrollment.workShop?.registrationDate || '-'}</p>
+                <p style={{ color: 'var(--text-secondary-dark)', margin: 0 }}><strong>Time:</strong> {selectedEnrollment.workShop?.time || '-'}</p>
+                <p style={{ color: 'var(--text-secondary-dark)', margin: 0 }}><strong>Venue:</strong> {selectedEnrollment.workShop?.venue || '-'}</p>
+              </div>
+              <div style={{ flex: 1 }}>
+                <p style={{ color: 'var(--text-secondary-dark)', margin: 0 }}><strong>Amount:</strong> ₹{selectedEnrollment.amount}</p>
+                <p style={{ color: 'var(--text-secondary-dark)', margin: 0 }}><strong>Order ID:</strong> {selectedEnrollment.razorpayOrderId}</p>
+                <p style={{ color: 'var(--text-secondary-dark)', margin: 0 }}><strong>Payment ID:</strong> {selectedEnrollment.razorpayPaymentId || '-'}</p>
+                <p style={{ color: 'var(--text-secondary-dark)', margin: 0 }}><strong>Status:</strong> {selectedEnrollment.paymentStatus || 'PENDING'}</p>
+              </div>
+            </div>
+            <div style={{ marginTop: '18px', textAlign: 'right' }}>
+              <button onClick={closeEnrollmentDetails} className="btn btn-secondary">Close</button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <style>{`
         .image-dropzone:hover {
           border-color: var(--primary) !important;
@@ -650,6 +763,22 @@ const Dashboard = () => {
           from { transform: rotate(0deg); }
           to { transform: rotate(360deg); }
         }
+        .unit-btn {
+          transition: all 150ms ease;
+        }
+        .unit-btn:focus {
+          outline: 2px solid rgba(6,179,212,0.18);
+          outline-offset: 2px;
+        }
+        .quantity-input input.form-input:focus {
+          outline: none;
+        }
+        .qty-btn {
+          transition: transform 120ms ease, color 120ms ease;
+          background: transparent;
+          border: none;
+        }
+        .qty-btn:hover { transform: translateY(-2px); color: #fff; }
         @media (max-width: 768px) {
           .recycle-grid, .overview-details-grid {
             grid-template-columns: 1fr !important;

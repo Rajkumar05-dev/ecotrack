@@ -10,6 +10,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -37,6 +38,11 @@ private String image;
 		return new ResponseEntity<RecycleRequestDto>(recycleRequestService.addRequest(recycleRequestDto, userId),HttpStatus.CREATED);
 		
 	}
+
+@GetMapping("/user/{userId}")
+public ResponseEntity<java.util.List<RecycleRequestDto>> getRequestsByUser(@PathVariable String userId){
+    return new ResponseEntity<java.util.List<RecycleRequestDto>>(recycleRequestService.getRequestsByUser(userId), HttpStatus.OK);
+}
 @PutMapping("/reject/{id}")
 public ResponseEntity<RecycleRequestDto> rejectRequest(@PathVariable int id,@RequestParam String reason){
 	return new ResponseEntity<RecycleRequestDto>(recycleRequestService.rejectRequest(id, reason),HttpStatus.OK);

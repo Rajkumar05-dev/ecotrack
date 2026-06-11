@@ -26,6 +26,7 @@ public class RecycleRequest {
 	private String itemType;
 	private String itemImage;
 	private int quantity;
+	private String unit;
 	private String reason;
 	
 	@ManyToOne

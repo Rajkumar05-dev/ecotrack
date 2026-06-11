@@ -15,6 +15,7 @@ public class RecycleRequestDto {
 	private String itemType;
 	private String itemImage;
 	private int quantity;
+	private String unit;
 	private String reason;
 	private User user;
 	
